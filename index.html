@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>our hole</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    /* ── MOUTH LAYERS ── */
+    #mouth-layers {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    /*
+     * #mouth-inner groups every layer that lives INSIDE the mouth:
+     * throat, tongue, teeth. A JS-driven clip-path keeps these layers
+     * strictly between the bottom edge of lip-top and the top edge of
+     * lip-bottom — so nothing bleeds above or below the lips.
+     */
+    #mouth-inner {
+      position: fixed;   /* fixed → children's width:100% is unambiguously viewport-wide */
+      inset: 0;
+    }
+
+    /*
+     * Throat: full-screen <img>. object-fit:fill + preserveAspectRatio="none"
+     * in the SVG file guarantees true edge-to-edge stretching in all browsers.
+     */
+    #l-throat {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: fill;
+    }
+
+    /*
+     * All animated layers (tongue, teeth, lips).
+     * Using <img> + object-fit:fill is the most reliable cross-browser way
+     * to force SVG content to stretch to exact element dimensions.
+     */
+    .ml {
+      position: absolute;
+      left: 0;
+      width: 100%;
+      display: block;
+      object-fit: fill;
+    }
+
+    /* ── PLAY OVERLAY ── */
+    #play-overlay {
+      position: fixed; inset: 0; z-index: 10;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+    #play-overlay.hidden { display: none; }
+
+    #play-text {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(0.8rem, 2.5vw, 1.2rem);
+      letter-spacing: 0.35em;
+      text-transform: lowercase;
+      color: #540f2e;
+      user-select: none;
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.25; }
+      50%       { opacity: 0.85; }
+    }
+
+    /* ── MENU BUTTON ── */
+    #menu-btn {
+      position: fixed; top: 14px; right: 14px; z-index: 20;
+      background: none; border: none; cursor: pointer;
+      padding: 6px; opacity: 0.18; transition: opacity 0.2s; line-height: 0;
+    }
+    #menu-btn:hover, #menu-btn:focus-visible { opacity: 0.85; outline: none; }
+
+    /* ── MENU PANEL ── */
+    #menu {
+      position: fixed; inset: 0; z-index: 30;
+      background: rgba(253,253,221,0.97);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+    }
+    #menu.open { opacity: 1; pointer-events: auto; }
+
+    #menu-close {
+      position: absolute; top: 14px; right: 18px;
+      background: none; border: none; cursor: pointer;
+      font-size: 1.75rem; color: #540f2e; opacity: 0.4;
+      transition: opacity 0.2s; line-height: 1; padding: 4px 8px;
+    }
+    #menu-close:hover { opacity: 1; }
+
+    #menu-title {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(1.1rem, 3.5vw, 2.2rem);
+      color: #540f2e; letter-spacing: 0.3em; text-transform: lowercase;
+      margin-bottom: 2.5rem; opacity: 0.5;
+    }
+
+    #monologue-list {
+      list-style: none; text-align: center; width: 100%; max-width: 360px;
+    }
+    #monologue-list li {
+      font-family: 'Courier New', monospace;
+      font-size: clamp(0.85rem, 2.2vw, 1.1rem);
+      color: #540f2e; letter-spacing: 0.18em; text-transform: lowercase;
+      padding: 1rem 2rem; cursor: pointer; opacity: 0.45;
+      transition: opacity 0.2s;
+      border-top: 1px solid rgba(84,15,46,0.15);
+    }
+    #monologue-list li:last-child { border-bottom: 1px solid rgba(84,15,46,0.15); }
+    #monologue-list li:hover   { opacity: 1; }
+    #monologue-list li.current { opacity: 1; }
+    #monologue-list li.current::before {
+      content: '\25B6\00A0';
+      font-size: 0.55em; vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── MOUTH LAYERS: back → front ── -->
+  <div id="mouth-layers">
+
+    <!--
+      INNER MOUTH GROUP
+      Clipped by JS so throat/tongue/teeth are only visible between
+      the bottom edge of lip-top and the top edge of lip-bottom.
+      Above lip-top and below lip-bottom: white body background shows.
+    -->
+    <div id="mouth-inner">
+      <img id="l-throat"
+           src="separated%20mouth%20parts/throat.svg" alt="">
+      <img id="l-tongue"    class="ml"
+           src="separated%20mouth%20parts/tongue.svg" alt="">
+      <img id="l-teeth-bot" class="ml"
+           src="separated%20mouth%20parts/teeth-bottom.svg" alt="">
+      <img id="l-teeth-top" class="ml"
+           src="separated%20mouth%20parts/teeth-top.svg" alt="">
+    </div>
+
+    <!-- LIPS — outside the clip group, always fully visible -->
+    <img id="l-lip-bot" class="ml"
+         src="separated%20mouth%20parts/lip-bottom.svg" alt="">
+    <img id="l-lip-top" class="ml"
+         src="separated%20mouth%20parts/lip-top.svg" alt="">
+
+  </div>
+
+  <!-- ── CLICK TO BEGIN ── -->
+  <div id="play-overlay">
+    <span id="play-text">click to begin</span>
+  </div>
+
+  <!-- ── HAMBURGER ── -->
+  <button id="menu-btn" aria-label="Open menu">
+    <svg width="22" height="16" viewBox="0 0 22 16" fill="none"
+         stroke="#540f2e" stroke-width="2.2" stroke-linecap="round">
+      <line x1="0" y1="1"  x2="22" y2="1"/>
+      <line x1="0" y1="8"  x2="22" y2="8"/>
+      <line x1="0" y1="15" x2="22" y2="15"/>
+    </svg>
+  </button>
+
+  <!-- ── MENU PANEL ── -->
+  <nav id="menu" role="dialog" aria-label="Monologue menu" aria-hidden="true">
+    <button id="menu-close" aria-label="Close menu">&#x00D7;</button>
+    <p id="menu-title">our hole</p>
+    <ul id="monologue-list"></ul>
+  </nav>
+
+  <script>
+    'use strict';
+
+    // ── Monologues (loaded from tracks.json) ────────────────────────────────────
+    let monologues = [];
+
+    // ── Layer configuration ─────────────────────────────────────────────────────
+    //
+    // cTop  – closed top edge as a fraction of viewport height
+    // ht    – element height as a fraction of viewport height (fixed)
+    // dy    – total translation closed→open (fraction of vh; negative = moves up)
+    // alpha – per-layer smoothing; higher = faster/more responsive
+    //
+    // Staggered alpha creates the floating effect:
+    //   lips snap open first → teeth follow → tongue lags most.
+    //
+    // Array order must match DOM layer order for correct index references:
+    //   [0] l-lip-top   (used to compute clip top)
+    //   [1] l-teeth-top
+    //   [2] l-tongue
+    //   [3] l-teeth-bot
+    //   [4] l-lip-bot   (used to compute clip bottom)
+    const LAYER_CFG = [
+      { id: 'l-lip-top',   cTop: 0.335, ht: 0.15, dy: -0.335, alpha: 0.20 },
+      { id: 'l-teeth-top', cTop: 0.370, ht: 0.13, dy: -0.230, alpha: 0.14 },
+      { id: 'l-tongue',    cTop: 0.520, ht: 0.25, dy:  0.080, alpha: 0.08 },
+      { id: 'l-teeth-bot', cTop: 0.500, ht: 0.13, dy:  0.280, alpha: 0.14 },
+      { id: 'l-lip-bot',   cTop: 0.515, ht: 0.15, dy:  0.345, alpha: 0.20 },
+    ];
+
+    const layers = LAYER_CFG.map(cfg => ({
+      ...cfg,
+      el:     document.getElementById(cfg.id),
+      smooth: 0
+    }));
+
+    const mouthInner = document.getElementById('mouth-inner');
+
+    // ── Layout ──────────────────────────────────────────────────────────────────
+
+    function renderFrame(h) {
+      // ── 1. Position every animated layer ──
+      for (const layer of layers) {
+        const top    = (layer.cTop + layer.dy * layer.smooth) * h;
+        const height =  layer.ht * h;
+        layer.el.style.top    = top    + 'px';
+        layer.el.style.height = height + 'px';
+      }
+
+      // ── 2. Clip the inner-mouth group to the live lip opening ──
+      //
+      // lip-top bottom edge  = (cTop + ht + dy·smooth) × h
+      // lip-bot top  edge    = (cTop       + dy·smooth) × h
+      //
+      // clip-path: inset(top 0 bottom 0) trims those many pixels
+      // from the top/bottom of #mouth-inner (which is inset:0 / full-screen).
+      // Result: throat, tongue and teeth are invisible outside the lips.
+      const lt = layers[0];  // l-lip-top
+      const lb = layers[4];  // l-lip-bot
+
+      const lipTopBottom = (lt.cTop + lt.ht + lt.dy * lt.smooth) * h;
+      const lipBotTop    = (lb.cTop          + lb.dy * lb.smooth) * h;
+
+      const clipT = Math.max(0, lipTopBottom).toFixed(1);
+      const clipB = Math.max(0, h - lipBotTop).toFixed(1);
+      mouthInner.style.clipPath = `inset(${clipT}px 0px ${clipB}px 0px)`;
+    }
+
+    let VH = window.innerHeight;
+    renderFrame(VH);
+
+    window.addEventListener('resize', () => {
+      VH = window.innerHeight;
+      renderFrame(VH);
+    });
+
+    // ── Audio ───────────────────────────────────────────────────────────────────
+    let audioCtx   = null;
+    let analyser   = null;
+    let audioEl    = null;
+    let animFrame  = null;
+    let isPlaying  = false;
+    let currentIdx = 0;
+
+    // Puppet envelope state
+    let targetOpen = 0;
+
+    // Fast attack catches each syllable onset; slow decay keeps the mouth
+    // open between syllables (≈1 s to close from moderate energy) — Muppet feel.
+    const ATTACK = 0.55;
+    const DECAY  = 0.05;
+
+    // Speech band: fftSize 2048, ~44 100 Hz → bin ≈ 21.5 Hz
+    // bins 4–140 ≈ 86 Hz–3 010 Hz  (fundamental + first formants)
+    const SP_LO = 4, SP_HI = 140;
+
+    function startAnalysis() {
+      const N    = analyser.frequencyBinCount;
+      const data = new Uint8Array(N);
+
+      function tick() {
+        animFrame = requestAnimationFrame(tick);
+        analyser.getByteFrequencyData(data);
+
+        // Average energy across the speech band (0–1)
+        let sum = 0;
+        for (let i = SP_LO; i <= SP_HI; i++) sum += data[i];
+        const energy = sum / (SP_HI - SP_LO + 1) / 255;
+
+        // Asymmetric envelope: snap open on onset, drift closed slowly
+        const k = (energy > targetOpen) ? ATTACK : DECAY;
+        targetOpen += (energy - targetOpen) * k;
+
+        // Each layer chases targetOpen at its own rate → staggered floating
+        for (const layer of layers) {
+          layer.smooth += (targetOpen - layer.smooth) * layer.alpha;
+        }
+
+        renderFrame(VH);
+      }
+
+      tick();
+    }
+
+    // ── Playback ────────────────────────────────────────────────────────────────
+    function stopPlayback() {
+      if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+      if (audioEl)   { audioEl.pause(); }
+      targetOpen = 0;
+      isPlaying  = false;
+    }
+
+    async function play(index) {
+      stopPlayback();
+      currentIdx = index;
+      updateMenuSelection(index);
+
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        audioEl  = new Audio();
+        const src = audioCtx.createMediaElementSource(audioEl);
+        analyser  = audioCtx.createAnalyser();
+        analyser.fftSize               = 2048;
+        analyser.smoothingTimeConstant = 0.15;
+        src.connect(analyser);
+        analyser.connect(audioCtx.destination);
+      }
+
+      audioEl.src = monologues[index].audio;
+      audioEl.load();
+      await audioCtx.resume();
+
+      audioEl.play()
+        .then(() => { isPlaying = true; startAnalysis(); })
+        .catch(err => console.error('Playback error:', err));
+
+      audioEl.onended = () => {
+        if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+        targetOpen = 0;
+        isPlaying  = false;
+      };
+    }
+
+    // ── Menu ────────────────────────────────────────────────────────────────────
+    function updateMenuSelection(idx) {
+      document.querySelectorAll('#monologue-list li').forEach((li, i) =>
+        li.classList.toggle('current', i === idx)
+      );
+    }
+
+    function buildMenu() {
+      const list = document.getElementById('monologue-list');
+      list.innerHTML = '';
+      monologues.forEach((mono, i) => {
+        const li = document.createElement('li');
+        li.textContent = mono.title;
+        if (i === currentIdx) li.classList.add('current');
+        li.addEventListener('click', () => {
+          closeMenu();
+          if (document.getElementById('play-overlay').classList.contains('hidden')) {
+            play(i);
+          } else {
+            currentIdx = i;
+            updateMenuSelection(i);
+          }
+        });
+        list.appendChild(li);
+      });
+    }
+
+    document.getElementById('play-overlay').addEventListener('click', () => {
+      document.getElementById('play-overlay').classList.add('hidden');
+      play(currentIdx);
+    });
+
+    // Load tracks from tracks.json, fall back to a default if unavailable
+    async function initTracks() {
+      try {
+        const res = await fetch('tracks.json');
+        if (res.ok) monologues = await res.json();
+      } catch (_) {
+        // running without a server or tracks.json missing — use built-in default
+        monologues = [{ title: 'ourhole', audio: 'OurHole_Final.mp3' }];
+      }
+      if (!monologues.length) {
+        monologues = [{ title: 'ourhole', audio: 'OurHole_Final.mp3' }];
+      }
+      buildMenu();
+    }
+
+    initTracks();
+
+    const menuEl    = document.getElementById('menu');
+    const menuBtn   = document.getElementById('menu-btn');
+    const menuClose = document.getElementById('menu-close');
+
+    function openMenu()  { menuEl.classList.add('open');    menuEl.setAttribute('aria-hidden', 'false'); }
+    function closeMenu() { menuEl.classList.remove('open'); menuEl.setAttribute('aria-hidden', 'true');  }
+
+    menuBtn.addEventListener('click', openMenu);
+    menuClose.addEventListener('click', closeMenu);
+    menuEl.addEventListener('click', e => { if (e.target === menuEl) closeMenu(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+  </script>
+
+</body>
+</html>

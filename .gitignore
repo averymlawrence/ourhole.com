@@ -1,0 +1,15 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Claude Code workspace
+.claude/
+
+# Old/unused assets (not needed for the live site)
+mouth-shapes-1/
+reference jpgs/
+
+# Editor junk
+*.orig
+*.bak
+Thumbs.db

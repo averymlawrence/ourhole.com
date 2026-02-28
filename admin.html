@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>our hole — admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #fdfddd;
+      color: #540f2e;
+      min-height: 100vh;
+      padding: 2.5rem 1.5rem;
+    }
+
+    .panel { max-width: 500px; margin: 0 auto; }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: clamp(1rem, 3vw, 1.4rem);
+      letter-spacing: 0.3em;
+      text-transform: lowercase;
+      opacity: 0.5;
+    }
+
+    h2 {
+      font-size: 0.75rem;
+      letter-spacing: 0.25em;
+      text-transform: lowercase;
+      opacity: 0.4;
+      margin: 2.5rem 0 0.8rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(84,15,46,0.2);
+    }
+
+    p.note {
+      font-size: 0.78rem;
+      line-height: 1.75;
+      opacity: 0.5;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.72rem;
+      letter-spacing: 0.2em;
+      text-transform: lowercase;
+      opacity: 0.45;
+      margin-bottom: 0.3rem;
+    }
+
+    input[type="text"],
+    input[type="password"] {
+      display: block;
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.88rem;
+      color: #540f2e;
+      background: #fff;
+      border: 1px solid rgba(84,15,46,0.28);
+      border-radius: 2px;
+      margin-bottom: 1.1rem;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus { border-color: #540f2e; }
+
+    input[type="file"] {
+      display: block;
+      width: 100%;
+      font-family: 'Courier New', monospace;
+      font-size: 0.82rem;
+      color: #540f2e;
+      margin-bottom: 1.1rem;
+      cursor: pointer;
+    }
+
+    .source-row {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+    .source-row label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      opacity: 0.55;
+      cursor: pointer;
+      margin-bottom: 0;
+    }
+
+    button {
+      font-family: 'Courier New', monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      text-transform: lowercase;
+      color: #fdfddd;
+      background: #540f2e;
+      border: none;
+      padding: 0.65rem 1.5rem;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: opacity 0.15s;
+    }
+    button:hover  { opacity: 0.72; }
+    button:disabled { opacity: 0.3; cursor: default; }
+
+    .btn-ghost {
+      color: #540f2e;
+      background: transparent;
+      border: 1px solid rgba(84,15,46,0.3);
+      padding: 0.35rem 0.9rem;
+      font-size: 0.72rem;
+    }
+
+    .btn-remove {
+      color: #fdfddd;
+      background: #ed1c24;
+      padding: 0.28rem 0.7rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+    }
+
+    #track-list { list-style: none; }
+    #track-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(84,15,46,0.1);
+    }
+    .t-index {
+      font-size: 0.65rem;
+      opacity: 0.28;
+      min-width: 1.2rem;
+      text-align: right;
+    }
+    .t-title { flex: 1; font-size: 0.88rem; }
+    .t-audio { opacity: 0.35; font-size: 0.72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 160px; }
+
+    .status-bar {
+      margin-top: 1.5rem;
+      font-size: 0.78rem;
+      letter-spacing: 0.08em;
+      min-height: 1.1em;
+    }
+    .status-bar.ok      { color: #1e7a1e; }
+    .status-bar.err     { color: #ed1c24; }
+    .status-bar.loading { opacity: 0.45; }
+
+    progress {
+      display: block;
+      width: 100%;
+      height: 3px;
+      margin-bottom: 1rem;
+      accent-color: #540f2e;
+      border: none;
+    }
+    .progress-row { display: none; }
+    .progress-row.visible { display: block; }
+
+    a.back-link {
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      color: #540f2e;
+      opacity: 0.38;
+      text-decoration: none;
+      text-transform: lowercase;
+    }
+    a.back-link:hover { opacity: 0.8; }
+
+    hr { border: none; border-top: 1px solid rgba(84,15,46,0.12); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="panel">
+
+  <!-- ── SETUP VIEW ── -->
+  <div id="view-setup">
+    <div class="top-bar">
+      <h1>our hole — admin</h1>
+      <a href="index.html" class="back-link">← back to site</a>
+    </div>
+
+    <p class="note">
+      Connect your GitHub repository to manage audio tracks.<br>
+      You need a <strong>Personal Access Token</strong> with
+      <strong>Contents</strong> read &amp; write permission for this repo.
+      <br><br>
+      Create one at:
+      <code style="font-size:0.75rem;">github.com → Settings → Developer settings →<br>
+      Personal access tokens → Fine-grained tokens</code>
+    </p>
+
+    <form id="setup-form">
+      <label for="f-owner">github username</label>
+      <input type="text" id="f-owner" autocomplete="off" spellcheck="false"
+             placeholder="your-github-username">
+
+      <label for="f-repo">repository name</label>
+      <input type="text" id="f-repo" autocomplete="off" spellcheck="false"
+             placeholder="ourhole.com">
+
+      <label for="f-branch">branch (usually "main")</label>
+      <input type="text" id="f-branch" autocomplete="off" spellcheck="false"
+             placeholder="main" value="main">
+
+      <label for="f-token">personal access token</label>
+      <input type="password" id="f-token" autocomplete="off" placeholder="ghp_...">
+
+      <button type="submit" id="setup-btn">connect to github</button>
+    </form>
+
+    <div id="setup-status" class="status-bar" style="margin-top:1rem;"></div>
+  </div>
+
+
+  <!-- ── ADMIN VIEW ── -->
+  <div id="view-admin" hidden>
+    <div class="top-bar">
+      <h1>our hole — admin</h1>
+      <span>
+        <a href="index.html" class="back-link">← site</a>
+        &nbsp;&nbsp;
+        <button class="btn-ghost" id="btn-logout">disconnect</button>
+      </span>
+    </div>
+
+    <!-- Track list -->
+    <h2>current tracks</h2>
+    <ul id="track-list">
+      <li style="opacity:0.35;font-size:0.8rem;padding:0.6rem 0;">loading…</li>
+    </ul>
+
+    <!-- Add track -->
+    <h2>add new track</h2>
+    <form id="add-form">
+      <label for="new-title">title</label>
+      <input type="text" id="new-title" placeholder="monologue title" autocomplete="off">
+
+      <div class="source-row">
+        <label><input type="radio" name="audio-src" value="upload" checked> upload mp3 file</label>
+        <label><input type="radio" name="audio-src" value="url"> use external url</label>
+      </div>
+
+      <div id="src-upload">
+        <label for="new-file">mp3 file</label>
+        <input type="file" id="new-file" accept="audio/mpeg,.mp3">
+        <p class="note" style="margin-bottom:1rem;margin-top:-0.5rem;">
+          Files are uploaded directly to your GitHub repo. Keep under ~50 MB.
+        </p>
+      </div>
+
+      <div id="src-url" hidden>
+        <label for="new-url">audio url</label>
+        <input type="text" id="new-url" placeholder="https://… (must be a publicly accessible mp3)"
+               autocomplete="off">
+        <p class="note" style="margin-bottom:1rem;margin-top:-0.5rem;">
+          The URL is saved as-is in tracks.json. No file is uploaded to GitHub.
+        </p>
+      </div>
+
+      <div class="progress-row" id="progress-row">
+        <progress id="upload-progress" value="0" max="100"></progress>
+      </div>
+
+      <button type="submit" id="add-btn">add track</button>
+    </form>
+
+    <div id="status" class="status-bar"></div>
+
+    <hr>
+    <p class="note" style="font-size:0.7rem;">
+      Changes are committed to <span id="repo-label" style="opacity:0.8;"></span>
+      and go live as soon as GitHub Pages redeploys (usually &lt;30 sec).
+    </p>
+  </div>
+
+</div><!-- /panel -->
+
+<script>
+'use strict';
+
+const CFG_KEY = 'ourhole_admin_v1';
+
+// ── Config persistence ─────────────────────────────────────────────────────────
+
+function loadCfg() {
+  try { return JSON.parse(localStorage.getItem(CFG_KEY) || 'null'); } catch { return null; }
+}
+function saveCfg(cfg) { localStorage.setItem(CFG_KEY, JSON.stringify(cfg)); }
+function clearCfg()   { localStorage.removeItem(CFG_KEY); }
+
+// ── GitHub API ────────────────────────────────────────────────────────────────
+
+async function ghFetch(path, opts = {}) {
+  const cfg = loadCfg();
+  return fetch('https://api.github.com' + path, {
+    ...opts,
+    headers: {
+      'Authorization':        'Bearer ' + cfg.token,
+      'Accept':               'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      ...(opts.headers || {})
+    }
+  });
+}
+
+// Encode a UTF-8 string to base64
+function encodeB64(str) {
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+// Encode a File/Blob to base64 (returns Promise<string>)
+function fileToB64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = e => resolve(
+      btoa(new Uint8Array(e.target.result)
+        .reduce((s, b) => s + String.fromCharCode(b), ''))
+    );
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+// ── tracks.json helpers ───────────────────────────────────────────────────────
+
+let tracksSHA = null;   // SHA of tracks.json on GitHub (needed for updates)
+
+async function loadTracks() {
+  const cfg = loadCfg();
+  const res = await ghFetch(
+    `/repos/${cfg.owner}/${cfg.repo}/contents/tracks.json?ref=${cfg.branch}`
+  );
+  if (res.status === 404) { tracksSHA = null; return []; }
+  if (!res.ok) throw new Error(`GitHub: ${res.status} ${res.statusText}`);
+
+  const data  = await res.json();
+  tracksSHA   = data.sha;
+  const json  = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+  return JSON.parse(json);
+}
+
+async function saveTracks(tracks) {
+  const cfg  = loadCfg();
+  const body = {
+    message: 'Update tracks via admin',
+    content: encodeB64(JSON.stringify(tracks, null, 2)),
+    branch:  cfg.branch
+  };
+  if (tracksSHA) body.sha = tracksSHA;
+
+  const res = await ghFetch(
+    `/repos/${cfg.owner}/${cfg.repo}/contents/tracks.json`,
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.message || `Save failed: ${res.status}`);
+  }
+  const data = await res.json();
+  tracksSHA  = data.content.sha;
+}
+
+// Upload a File to the repo root, returns the filename used
+async function uploadAudio(file) {
+  const cfg   = loadCfg();
+  // Sanitise filename: lowercase, spaces→dashes, keep only safe chars
+  const fname = file.name
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9._-]/g, '_');
+
+  const b64 = await fileToB64(file);
+
+  // Check if the file already exists (need its SHA to overwrite)
+  const existing = await ghFetch(
+    `/repos/${cfg.owner}/${cfg.repo}/contents/${fname}?ref=${cfg.branch}`
+  );
+  const body = {
+    message: `Upload audio: ${fname}`,
+    content: b64,
+    branch:  cfg.branch
+  };
+  if (existing.ok) {
+    const d = await existing.json();
+    body.sha = d.sha;
+  }
+
+  const res = await ghFetch(
+    `/repos/${cfg.owner}/${cfg.repo}/contents/${fname}`,
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
+  );
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.message || `Upload failed: ${res.status}`);
+  }
+  return fname;
+}
+
+// ── UI helpers ────────────────────────────────────────────────────────────────
+
+const viewSetup = document.getElementById('view-setup');
+const viewAdmin = document.getElementById('view-admin');
+const statusEl  = document.getElementById('status');
+const setupSt   = document.getElementById('setup-status');
+
+function setStatus(msg, type = '') { statusEl.textContent = msg; statusEl.className = 'status-bar ' + type; }
+
+let tracksCache = [];
+
+function renderTracks(tracks) {
+  tracksCache = tracks;
+  const list  = document.getElementById('track-list');
+  list.innerHTML = '';
+
+  if (!tracks.length) {
+    list.innerHTML = '<li style="opacity:0.35;font-size:0.78rem;padding:0.6rem 0;">no tracks yet — add one below.</li>';
+    return;
+  }
+
+  tracks.forEach((t, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span class="t-index">${i + 1}</span>
+      <span class="t-title">${t.title}</span>
+      <span class="t-audio" title="${t.audio}">${t.audio}</span>
+      <button class="btn-remove" data-i="${i}" title="Remove from menu (audio file stays in repo)">remove</button>
+    `;
+    li.querySelector('.btn-remove').addEventListener('click', async () => {
+      if (!confirm(`Remove "${t.title}" from the menu?\n\n(The audio file stays in the repo — only the menu entry is removed.)`)) return;
+      const updated = tracksCache.filter((_, j) => j !== i);
+      setStatus('saving…', 'loading');
+      try {
+        await saveTracks(updated);
+        renderTracks(updated);
+        setStatus(`"${t.title}" removed from menu.`, 'ok');
+      } catch (e) {
+        setStatus('error: ' + e.message, 'err');
+      }
+    });
+    list.appendChild(li);
+  });
+}
+
+async function showAdmin() {
+  viewSetup.hidden = true;
+  viewAdmin.hidden = false;
+  const cfg = loadCfg();
+  document.getElementById('repo-label').textContent = `${cfg.owner}/${cfg.repo}`;
+  setStatus('loading tracks…', 'loading');
+  try {
+    const tracks = await loadTracks();
+    renderTracks(tracks);
+    setStatus('');
+  } catch (e) {
+    setStatus('could not load tracks: ' + e.message, 'err');
+  }
+}
+
+// ── Source toggle (upload vs URL) ─────────────────────────────────────────────
+
+document.querySelectorAll('input[name="audio-src"]').forEach(radio => {
+  radio.addEventListener('change', () => {
+    const isUpload = radio.value === 'upload' && radio.checked;
+    document.getElementById('src-upload').hidden = !isUpload;
+    document.getElementById('src-url').hidden    =  isUpload;
+  });
+});
+
+// ── Setup form ────────────────────────────────────────────────────────────────
+
+document.getElementById('setup-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const cfg = {
+    owner:  document.getElementById('f-owner').value.trim(),
+    repo:   document.getElementById('f-repo').value.trim(),
+    branch: document.getElementById('f-branch').value.trim() || 'main',
+    token:  document.getElementById('f-token').value.trim()
+  };
+  if (!cfg.owner || !cfg.repo || !cfg.token) {
+    setupSt.textContent = 'please fill in all fields.';
+    setupSt.className   = 'status-bar err';
+    return;
+  }
+
+  const btn = document.getElementById('setup-btn');
+  btn.disabled = true;
+  setupSt.textContent = 'connecting…';
+  setupSt.className   = 'status-bar loading';
+
+  try {
+    saveCfg(cfg);
+
+    // Verify token
+    const userRes = await ghFetch('/user');
+    if (!userRes.ok) throw new Error('invalid token or network error');
+    const user = await userRes.json();
+
+    // Verify repo access
+    const repoRes = await ghFetch(`/repos/${cfg.owner}/${cfg.repo}`);
+    if (!repoRes.ok) throw new Error(`cannot access "${cfg.owner}/${cfg.repo}" — check the repo name`);
+
+    setupSt.textContent = `connected as ${user.login}.`;
+    setupSt.className   = 'status-bar ok';
+    await showAdmin();
+
+  } catch (err) {
+    clearCfg();
+    setupSt.textContent = 'error: ' + err.message;
+    setupSt.className   = 'status-bar err';
+    btn.disabled        = false;
+  }
+});
+
+// ── Add track form ────────────────────────────────────────────────────────────
+
+document.getElementById('add-form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const title    = document.getElementById('new-title').value.trim();
+  const srcMode  = document.querySelector('input[name="audio-src"]:checked').value;
+  const file     = document.getElementById('new-file').files[0];
+  const urlVal   = document.getElementById('new-url').value.trim();
+
+  if (!title) { setStatus('please enter a title.', 'err'); return; }
+  if (srcMode === 'upload' && !file)  { setStatus('please choose an mp3 file.', 'err'); return; }
+  if (srcMode === 'url'    && !urlVal) { setStatus('please enter an audio url.', 'err'); return; }
+
+  const addBtn      = document.getElementById('add-btn');
+  const progressRow = document.getElementById('progress-row');
+  const progressBar = document.getElementById('upload-progress');
+
+  addBtn.disabled = true;
+  setStatus('', '');
+
+  let audioRef;
+
+  if (srcMode === 'upload') {
+    progressRow.classList.add('visible');
+    progressBar.value = 5;
+    setStatus('uploading audio file to github…', 'loading');
+    try {
+      audioRef      = await uploadAudio(file);
+      progressBar.value = 65;
+    } catch (err) {
+      setStatus('upload error: ' + err.message, 'err');
+      addBtn.disabled = false;
+      progressRow.classList.remove('visible');
+      progressBar.value = 0;
+      return;
+    }
+  } else {
+    audioRef = urlVal;
+  }
+
+  setStatus('updating track list…', 'loading');
+  progressBar.value = 80;
+
+  try {
+    const updated = [...tracksCache, { title, audio: audioRef }];
+    await saveTracks(updated);
+    progressBar.value = 100;
+    renderTracks(updated);
+
+    // Reset form
+    document.getElementById('new-title').value = '';
+    document.getElementById('new-file').value  = '';
+    document.getElementById('new-url').value   = '';
+
+    setStatus(`"${title}" added! The site will update within ~30 seconds.`, 'ok');
+  } catch (err) {
+    setStatus('error saving tracks: ' + err.message, 'err');
+  } finally {
+    addBtn.disabled = false;
+    progressRow.classList.remove('visible');
+    progressBar.value = 0;
+  }
+});
+
+// ── Disconnect ────────────────────────────────────────────────────────────────
+
+document.getElementById('btn-logout').addEventListener('click', () => {
+  clearCfg();
+  viewAdmin.hidden = true;
+  viewSetup.hidden = false;
+  setupSt.textContent = '';
+  document.getElementById('f-token').value = '';
+});
+
+// ── Auto-resume if already configured ────────────────────────────────────────
+
+const saved = loadCfg();
+if (saved?.token) showAdmin();
+
+</script>
+</body>
+</html>
