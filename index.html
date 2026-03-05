@@ -360,10 +360,10 @@
     // Puppet envelope state
     let targetOpen = 0;
 
-    // Fast attack catches each syllable onset; slow decay keeps the mouth
-    // open between syllables (≈1 s to close from moderate energy) — Muppet feel.
+    // Fast attack catches each syllable onset; decay closes the mouth during silence.
+    // Higher DECAY = snappier closing (was 0.05 for slow Muppet hold).
     const ATTACK = 0.55;
-    const DECAY  = 0.05;
+    const DECAY  = 0.18;
 
     // Speech band: fftSize 2048, ~44 100 Hz → bin ≈ 21.5 Hz
     // bins 4–140 ≈ 86 Hz–3 010 Hz  (fundamental + first formants)
@@ -377,10 +377,12 @@
         animFrame = requestAnimationFrame(tick);
         analyser.getByteFrequencyData(data);
 
-        // Average energy across the speech band (0–1)
+        // Average energy across the speech band, scaled up so loud peaks
+        // drive the mouth to near-full open (raw speech energy ≈ 0.05–0.2,
+        // multiplying by 4 maps that range to 0.2–0.8+).
         let sum = 0;
         for (let i = SP_LO; i <= SP_HI; i++) sum += data[i];
-        const energy = sum / (SP_HI - SP_LO + 1) / 255;
+        const energy = Math.min(1, (sum / (SP_HI - SP_LO + 1) / 255) * 4);
 
         // Asymmetric envelope: snap open on onset, drift closed slowly
         const k = (energy > targetOpen) ? ATTACK : DECAY;
