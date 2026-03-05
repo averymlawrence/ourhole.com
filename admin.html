@@ -260,6 +260,12 @@
         <p class="note" style="margin-bottom:1rem;margin-top:-0.5rem;">
           Files are uploaded directly to your GitHub repo. Keep under ~50 MB.
         </p>
+
+        <label for="new-vtt">captions file (.vtt) — optional</label>
+        <input type="file" id="new-vtt" accept=".vtt,text/vtt">
+        <p class="note" style="margin-bottom:1rem;margin-top:-0.5rem;">
+          Upload a .vtt caption file to enable the CC button for this track.
+        </p>
       </div>
 
       <div id="src-url" hidden>
@@ -374,8 +380,8 @@ async function saveTracks(tracks) {
   tracksSHA  = data.content.sha;
 }
 
-// Upload a File to the repo root, returns the filename used
-async function uploadAudio(file) {
+// Upload any File to the repo root, returns the filename used
+async function uploadFile(file, label) {
   const cfg   = loadCfg();
   // Sanitise filename: lowercase, spaces→dashes, keep only safe chars
   const fname = file.name
@@ -390,7 +396,7 @@ async function uploadAudio(file) {
     `/repos/${cfg.owner}/${cfg.repo}/contents/${fname}?ref=${cfg.branch}`
   );
   const body = {
-    message: `Upload audio: ${fname}`,
+    message: `Upload ${label}: ${fname}`,
     content: b64,
     branch:  cfg.branch
   };
@@ -409,6 +415,10 @@ async function uploadAudio(file) {
   }
   return fname;
 }
+
+// Convenience wrappers
+const uploadAudio = file => uploadFile(file, 'audio');
+const uploadVTT   = file => uploadFile(file, 'captions');
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
 
@@ -437,6 +447,9 @@ function renderTracks(tracks) {
       <span class="t-index">${i + 1}</span>
       <span class="t-title">${t.title}</span>
       <span class="t-audio" title="${t.audio}">${t.audio}</span>
+      <span class="t-audio" title="${t.captions || ''}" style="color:${t.captions ? '#1e7a1e' : 'rgba(84,15,46,0.3)'}">
+        ${t.captions ? 'cc ✓' : 'no cc'}
+      </span>
       <button class="btn-remove" data-i="${i}" title="Remove from menu (audio file stays in repo)">remove</button>
     `;
     li.querySelector('.btn-remove').addEventListener('click', async () => {
@@ -532,6 +545,7 @@ document.getElementById('add-form').addEventListener('submit', async e => {
   const title    = document.getElementById('new-title').value.trim();
   const srcMode  = document.querySelector('input[name="audio-src"]:checked').value;
   const file     = document.getElementById('new-file').files[0];
+  const vttFile  = document.getElementById('new-vtt').files[0];
   const urlVal   = document.getElementById('new-url').value.trim();
 
   if (!title) { setStatus('please enter a title.', 'err'); return; }
@@ -546,20 +560,35 @@ document.getElementById('add-form').addEventListener('submit', async e => {
   setStatus('', '');
 
   let audioRef;
+  let captionsRef = null;
 
   if (srcMode === 'upload') {
     progressRow.classList.add('visible');
     progressBar.value = 5;
     setStatus('uploading audio file to github…', 'loading');
     try {
-      audioRef      = await uploadAudio(file);
-      progressBar.value = 65;
+      audioRef = await uploadAudio(file);
+      progressBar.value = vttFile ? 40 : 65;
     } catch (err) {
       setStatus('upload error: ' + err.message, 'err');
       addBtn.disabled = false;
       progressRow.classList.remove('visible');
       progressBar.value = 0;
       return;
+    }
+
+    if (vttFile) {
+      setStatus('uploading captions file to github…', 'loading');
+      try {
+        captionsRef = await uploadVTT(vttFile);
+        progressBar.value = 65;
+      } catch (err) {
+        setStatus('captions upload error: ' + err.message, 'err');
+        addBtn.disabled = false;
+        progressRow.classList.remove('visible');
+        progressBar.value = 0;
+        return;
+      }
     }
   } else {
     audioRef = urlVal;
@@ -569,7 +598,10 @@ document.getElementById('add-form').addEventListener('submit', async e => {
   progressBar.value = 80;
 
   try {
-    const updated = [...tracksCache, { title, audio: audioRef }];
+    const newTrack = { title, audio: audioRef };
+    if (captionsRef) newTrack.captions = captionsRef;
+
+    const updated = [...tracksCache, newTrack];
     await saveTracks(updated);
     progressBar.value = 100;
     renderTracks(updated);
@@ -577,6 +609,7 @@ document.getElementById('add-form').addEventListener('submit', async e => {
     // Reset form
     document.getElementById('new-title').value = '';
     document.getElementById('new-file').value  = '';
+    document.getElementById('new-vtt').value   = '';
     document.getElementById('new-url').value   = '';
 
     setStatus(`"${title}" added! The site will update within ~30 seconds.`, 'ok');

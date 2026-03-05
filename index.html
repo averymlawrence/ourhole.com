@@ -411,6 +411,13 @@
       currentIdx = index;
       updateMenuSelection(index);
 
+      // Load captions for this track (if available)
+      if (monologues[index].captions) {
+        loadCaptions(monologues[index].captions);
+      } else {
+        cues = [];
+      }
+
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         audioEl  = new Audio();
@@ -487,10 +494,10 @@
         if (res.ok) monologues = await res.json();
       } catch (_) {
         // running without a server or tracks.json missing — use built-in default
-        monologues = [{ title: 'ourhole', audio: 'OurHole_Final.mp3' }];
+        monologues = [{ title: 'ourhole', audio: 'OurHole_Final.mp3', captions: 'ourhole-the-poem.vtt' }];
       }
       if (!monologues.length) {
-        monologues = [{ title: 'ourhole', audio: 'OurHole_Final.mp3' }];
+        monologues = [{ title: 'ourhole', audio: 'OurHole_Final.mp3', captions: 'ourhole-the-poem.vtt' }];
       }
       buildMenu();
     }
@@ -572,9 +579,6 @@
       if (captionTimer) { clearInterval(captionTimer); captionTimer = null; }
       document.getElementById('caption-display').classList.add('hidden');
     }
-
-    // Load captions at startup
-    loadCaptions('ourhole-the-poem.vtt');
 
     const ccBtn = document.getElementById('cc-btn');
     ccBtn.addEventListener('click', () => {
