@@ -382,7 +382,7 @@
         // multiplying by 4 maps that range to 0.2–0.8+).
         let sum = 0;
         for (let i = SP_LO; i <= SP_HI; i++) sum += data[i];
-        const energy = Math.min(1, (sum / (SP_HI - SP_LO + 1) / 255) * 1.75);
+        const energy = Math.min(1, (sum / (SP_HI - SP_LO + 1) / 255) * 1.3);
 
         // Asymmetric envelope: snap open on onset, drift closed slowly
         const k = (energy > targetOpen) ? ATTACK : DECAY;
