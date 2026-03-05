@@ -363,7 +363,7 @@
     // Fast attack catches each syllable onset; decay closes the mouth during silence.
     // Higher DECAY = snappier closing (was 0.05 for slow Muppet hold).
     const ATTACK = 0.55;
-    const DECAY  = 0.18;
+    const DECAY  = 0.10;
 
     // Speech band: fftSize 2048, ~44 100 Hz → bin ≈ 21.5 Hz
     // bins 4–140 ≈ 86 Hz–3 010 Hz  (fundamental + first formants)
@@ -382,7 +382,7 @@
         // multiplying by 4 maps that range to 0.2–0.8+).
         let sum = 0;
         for (let i = SP_LO; i <= SP_HI; i++) sum += data[i];
-        const energy = Math.min(1, (sum / (SP_HI - SP_LO + 1) / 255) * 4);
+        const energy = Math.min(1, (sum / (SP_HI - SP_LO + 1) / 255) * 2.5);
 
         // Asymmetric envelope: snap open on onset, drift closed slowly
         const k = (energy > targetOpen) ? ATTACK : DECAY;
