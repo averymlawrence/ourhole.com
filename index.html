@@ -60,15 +60,16 @@
     /* ── PLAY OVERLAY ── */
     #play-overlay {
       position: fixed; inset: 0; z-index: 10;
-      display: flex; align-items: center; justify-content: center;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding-top: 2.5rem;
       cursor: pointer;
     }
     #play-overlay.hidden { display: none; }
 
     #play-text {
-      font-family: 'Courier New', monospace;
-      font-size: clamp(0.8rem, 2.5vw, 1.2rem);
-      letter-spacing: 0.35em;
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      letter-spacing: 0.2em;
       text-transform: lowercase;
       color: #540f2e;
       user-select: none;
@@ -100,25 +101,26 @@
     #menu-close {
       position: absolute; top: 14px; right: 18px;
       background: none; border: none; cursor: pointer;
-      font-size: 1.75rem; color: #540f2e; opacity: 0.4;
+      font-size: 2rem; color: #540f2e; opacity: 0.4;
       transition: opacity 0.2s; line-height: 1; padding: 4px 8px;
+      font-family: system-ui, -apple-system, Arial, sans-serif;
     }
     #menu-close:hover { opacity: 1; }
 
     #menu-title {
-      font-family: 'Courier New', monospace;
-      font-size: clamp(1.1rem, 3.5vw, 2.2rem);
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+      font-size: clamp(1.5rem, 4.5vw, 2.8rem);
       color: #540f2e; letter-spacing: 0.3em; text-transform: lowercase;
       margin-bottom: 2.5rem; opacity: 0.5;
     }
 
     #monologue-list {
-      list-style: none; text-align: center; width: 100%; max-width: 360px;
+      list-style: none; text-align: center; width: 100%; max-width: 460px;
     }
     #monologue-list li {
-      font-family: 'Courier New', monospace;
-      font-size: clamp(0.85rem, 2.2vw, 1.1rem);
-      color: #540f2e; letter-spacing: 0.18em; text-transform: lowercase;
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+      font-size: clamp(1.1rem, 3vw, 1.6rem);
+      color: #540f2e; letter-spacing: 0.1em; text-transform: lowercase;
       padding: 1rem 2rem; cursor: pointer; opacity: 0.45;
       transition: opacity 0.2s;
       border-top: 1px solid rgba(84,15,46,0.15);
@@ -129,6 +131,77 @@
     #monologue-list li.current::before {
       content: '\25B6\00A0';
       font-size: 0.55em; vertical-align: middle;
+    }
+    #monologue-list li.about-item {
+      font-style: normal;
+    }
+
+    /* ── ABOUT OVERLAY ── */
+    #about-overlay {
+      position: fixed; inset: 0; z-index: 40;
+      background: #fff;
+      display: flex; align-items: center; justify-content: center;
+      padding: 3rem 4rem;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+      overflow-y: auto;
+    }
+    #about-overlay.open { opacity: 1; pointer-events: auto; }
+
+    #about-close {
+      position: fixed; top: 14px; right: 18px;
+      background: none; border: none; cursor: pointer;
+      font-size: 2.5rem; color: #000; opacity: 0.4;
+      transition: opacity 0.2s; line-height: 1; padding: 4px 8px;
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+    }
+    #about-close:hover { opacity: 1; }
+
+    #about-content {
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+      font-size: clamp(1.4rem, 4vw, 3rem);
+      font-weight: 700;
+      color: #000;
+      line-height: 1.4;
+      text-align: center;
+      max-width: 100%;
+    }
+    #about-content a {
+      color: #000;
+      text-decoration: underline;
+    }
+
+    /* ── CC BUTTON ── */
+    #cc-btn {
+      position: fixed; bottom: 14px; right: 14px; z-index: 20;
+      background: none; border: 2px solid #540f2e; border-radius: 4px;
+      cursor: pointer; padding: 4px 8px;
+      opacity: 0.25; transition: opacity 0.2s, background 0.2s;
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+      font-size: 0.8rem; font-weight: 700; letter-spacing: 0.05em;
+      color: #540f2e; line-height: 1;
+    }
+    #cc-btn:hover { opacity: 0.85; }
+    #cc-btn.active { opacity: 1; background: rgba(84,15,46,0.12); }
+
+    /* ── CAPTION DISPLAY ── */
+    #caption-display {
+      position: fixed; bottom: 60px; left: 0; right: 0; z-index: 15;
+      text-align: center; padding: 0.5rem 2rem;
+      pointer-events: none;
+      transition: opacity 0.15s;
+    }
+    #caption-display.hidden { opacity: 0; }
+
+    #caption-text {
+      display: inline-block;
+      background: rgba(0,0,0,0.78);
+      color: #fff;
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+      font-size: clamp(1.1rem, 3.5vw, 1.8rem);
+      font-weight: 600;
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -162,9 +235,9 @@
 
   </div>
 
-  <!-- ── CLICK TO BEGIN ── -->
+  <!-- ── TOUCH TO BEGIN ── -->
   <div id="play-overlay">
-    <span id="play-text">click to begin</span>
+    <span id="play-text">touch to begin</span>
   </div>
 
   <!-- ── HAMBURGER ── -->
@@ -183,6 +256,22 @@
     <p id="menu-title">our hole</p>
     <ul id="monologue-list"></ul>
   </nav>
+
+  <!-- ── CC BUTTON ── -->
+  <button id="cc-btn" aria-label="Toggle closed captions" aria-pressed="false">CC</button>
+
+  <!-- ── CAPTION DISPLAY ── -->
+  <div id="caption-display" class="hidden">
+    <span id="caption-text"></span>
+  </div>
+
+  <!-- ── ABOUT OVERLAY ── -->
+  <div id="about-overlay" role="dialog" aria-label="About" aria-hidden="true">
+    <button id="about-close" aria-label="Close about">&#x00D7;</button>
+    <div id="about-content">
+      Welcome to Our Hole. The original version of this site was created by Avery Lawrence and Cortlandt Schoonover in 2017 for a group show at Antenna Gallery in New Orleans, LA. For more information about Avery Lawrence go to <a href="https://averylawrence.com">averylawrence.com</a>. For more information about Cortlandt Schoonover go to <a href="https://corts.dev">corts.dev</a>. Enjoy Our Hole.
+    </div>
+  </div>
 
   <script>
     'use strict';
@@ -314,6 +403,7 @@
       if (audioEl)   { audioEl.pause(); }
       targetOpen = 0;
       isPlaying  = false;
+      stopCaptionUpdates();
     }
 
     async function play(index) {
@@ -337,19 +427,20 @@
       await audioCtx.resume();
 
       audioEl.play()
-        .then(() => { isPlaying = true; startAnalysis(); })
+        .then(() => { isPlaying = true; startAnalysis(); startCaptionUpdates(); })
         .catch(err => console.error('Playback error:', err));
 
       audioEl.onended = () => {
         if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
         targetOpen = 0;
         isPlaying  = false;
+        stopCaptionUpdates();
       };
     }
 
     // ── Menu ────────────────────────────────────────────────────────────────────
     function updateMenuSelection(idx) {
-      document.querySelectorAll('#monologue-list li').forEach((li, i) =>
+      document.querySelectorAll('#monologue-list li:not(.about-item)').forEach((li, i) =>
         li.classList.toggle('current', i === idx)
       );
     }
@@ -372,6 +463,16 @@
         });
         list.appendChild(li);
       });
+
+      // About link at bottom of menu
+      const aboutLi = document.createElement('li');
+      aboutLi.textContent = 'about';
+      aboutLi.classList.add('about-item');
+      aboutLi.addEventListener('click', () => {
+        closeMenu();
+        openAbout();
+      });
+      list.appendChild(aboutLi);
     }
 
     document.getElementById('play-overlay').addEventListener('click', () => {
@@ -406,7 +507,92 @@
     menuBtn.addEventListener('click', openMenu);
     menuClose.addEventListener('click', closeMenu);
     menuEl.addEventListener('click', e => { if (e.target === menuEl) closeMenu(); });
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMenu(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeMenu(); closeAbout(); } });
+
+    // ── Captions ─────────────────────────────────────────────────────────────────
+    let cues = [];
+    let ccEnabled = false;
+    let captionTimer = null;
+
+    async function loadCaptions(url) {
+      cues = [];
+      try {
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const text = await res.text();
+        cues = parseVTT(text);
+      } catch (e) { /* no captions available */ }
+    }
+
+    function parseVTT(text) {
+      const result = [];
+      const blocks = text.split(/\n\s*\n/);
+      for (const block of blocks) {
+        const lines = block.trim().split('\n');
+        const timeLine = lines.find(l => l.includes('-->'));
+        if (!timeLine) continue;
+        const [startStr, endStr] = timeLine.split('-->').map(s => s.trim());
+        const start = vttTime(startStr);
+        const end   = vttTime(endStr);
+        const cueText = lines
+          .filter(l => !l.includes('-->') && !/^\d+$/.test(l.trim()) && l.trim() !== 'WEBVTT')
+          .join(' ').trim();
+        if (cueText) result.push({ start, end, text: cueText });
+      }
+      return result;
+    }
+
+    function vttTime(s) {
+      const parts = s.split(':');
+      return parts.length === 3
+        ? +parts[0] * 3600 + +parts[1] * 60 + parseFloat(parts[2])
+        : +parts[0] * 60 + parseFloat(parts[1]);
+    }
+
+    function updateCaption() {
+      const display  = document.getElementById('caption-display');
+      const textEl   = document.getElementById('caption-text');
+      if (!ccEnabled || !audioEl || !isPlaying) { display.classList.add('hidden'); return; }
+      const t   = audioEl.currentTime;
+      const cue = cues.find(c => t >= c.start && t < c.end);
+      if (cue) {
+        textEl.textContent = cue.text;
+        display.classList.remove('hidden');
+      } else {
+        display.classList.add('hidden');
+      }
+    }
+
+    function startCaptionUpdates() {
+      if (captionTimer) clearInterval(captionTimer);
+      captionTimer = setInterval(updateCaption, 80);
+    }
+
+    function stopCaptionUpdates() {
+      if (captionTimer) { clearInterval(captionTimer); captionTimer = null; }
+      document.getElementById('caption-display').classList.add('hidden');
+    }
+
+    // Load captions at startup
+    loadCaptions('ourhole-the-poem.vtt');
+
+    const ccBtn = document.getElementById('cc-btn');
+    ccBtn.addEventListener('click', () => {
+      ccEnabled = !ccEnabled;
+      ccBtn.classList.toggle('active', ccEnabled);
+      ccBtn.setAttribute('aria-pressed', ccEnabled);
+      if (!ccEnabled) document.getElementById('caption-display').classList.add('hidden');
+    });
+
+    // ── About ─────────────────────────────────────────────────────────────────────
+    const aboutOverlay = document.getElementById('about-overlay');
+    const aboutClose   = document.getElementById('about-close');
+
+    function openAbout()  { aboutOverlay.classList.add('open');    aboutOverlay.setAttribute('aria-hidden', 'false'); }
+    function closeAbout() { aboutOverlay.classList.remove('open'); aboutOverlay.setAttribute('aria-hidden', 'true');  }
+
+    aboutClose.addEventListener('click', closeAbout);
+    aboutOverlay.addEventListener('click', e => { if (e.target === aboutOverlay) closeAbout(); });
   </script>
 
 </body>
