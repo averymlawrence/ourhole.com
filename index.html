@@ -365,6 +365,15 @@
     const ATTACK = 0.55;
     const DECAY  = 0.07;
 
+    // Noise gate: raw energy below this threshold is treated as silence → mouth stays shut.
+    // Raise if the mouth flutters during quiet/background-noise passages.
+    const NOISE_GATE = 0.10;
+
+    // Non-linear curve (exponent applied after gating).
+    // >1 = mouth stays closed during soft speech, opens dramatically at peaks.
+    // 1.0 = linear (original behaviour); 2.0 = very punchy.
+    const CURVE_POWER = 1.8;
+
     // Speech band: fftSize 2048, ~44 100 Hz → bin ≈ 21.5 Hz
     // bins 4–140 ≈ 86 Hz–3 010 Hz  (fundamental + first formants)
     const SP_LO = 4, SP_HI = 140;
@@ -377,12 +386,19 @@
         animFrame = requestAnimationFrame(tick);
         analyser.getByteFrequencyData(data);
 
-        // Average energy across the speech band, scaled up so loud peaks
-        // drive the mouth to near-full open (raw speech energy ≈ 0.05–0.2,
-        // multiplying by 4 maps that range to 0.2–0.8+).
+        // Average energy across the speech band.
         let sum = 0;
         for (let i = SP_LO; i <= SP_HI; i++) sum += data[i];
-        const energy = Math.min(1, (sum / (SP_HI - SP_LO + 1) / 255) * 1.3);
+        const raw = Math.min(1, (sum / (SP_HI - SP_LO + 1) / 255) * 1.3);
+
+        // 1. Noise gate: anything below the floor collapses to zero.
+        //    Above the floor, remap [NOISE_GATE → 1] to [0 → 1] so there's
+        //    no sudden jump when the gate opens.
+        const gated = raw < NOISE_GATE ? 0 : (raw - NOISE_GATE) / (1 - NOISE_GATE);
+
+        // 2. Non-linear curve: mouth stays nearly closed during quiet speech,
+        //    then opens dramatically at louder peaks.
+        const energy = Math.pow(gated, CURVE_POWER);
 
         // Asymmetric envelope: snap open on onset, drift closed slowly
         const k = (energy > targetOpen) ? ATTACK : DECAY;
