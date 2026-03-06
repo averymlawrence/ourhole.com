@@ -170,6 +170,19 @@
       text-decoration: underline;
     }
 
+    /* ── PAUSE / PLAY BUTTON ── */
+    #pause-btn {
+      position: fixed; bottom: 14px; left: 14px; z-index: 20;
+      background: none; border: 2px solid #540f2e; border-radius: 4px;
+      cursor: pointer; padding: 4px 10px;
+      opacity: 0.25; transition: opacity 0.2s;
+      font-family: system-ui, -apple-system, Arial, sans-serif;
+      font-size: 0.8rem; line-height: 1;
+      color: #540f2e;
+    }
+    #pause-btn:hover { opacity: 0.85; }
+    #pause-btn[hidden] { display: none; }
+
     /* ── CC BUTTON ── */
     #cc-btn {
       position: fixed; bottom: 14px; right: 14px; z-index: 20;
@@ -256,6 +269,9 @@
     <p id="menu-title">our hole</p>
     <ul id="monologue-list"></ul>
   </nav>
+
+  <!-- ── PAUSE / PLAY BUTTON ── -->
+  <button id="pause-btn" aria-label="Pause" hidden>⏸</button>
 
   <!-- ── CC BUTTON ── -->
   <button id="cc-btn" aria-label="Toggle closed captions" aria-pressed="false">CC</button>
@@ -416,13 +432,44 @@
     }
 
     // ── Playback ────────────────────────────────────────────────────────────────
+    const pauseBtn = document.getElementById('pause-btn');
+
+    function updatePauseBtn() {
+      pauseBtn.textContent = isPlaying ? '⏸' : '▶';
+      pauseBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Resume');
+    }
+
     function stopPlayback() {
       if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
       if (audioEl)   { audioEl.pause(); }
       targetOpen = 0;
+      for (const layer of layers) layer.smooth = 0;
+      renderFrame(VH);
       isPlaying  = false;
+      pauseBtn.hidden = true;
       stopCaptionUpdates();
     }
+
+    function togglePause() {
+      if (!audioEl) return;
+      if (isPlaying) {
+        // — Pause —
+        audioEl.pause();
+        if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+        targetOpen = 0;
+        for (const layer of layers) layer.smooth = 0;
+        renderFrame(VH);
+        isPlaying = false;
+      } else {
+        // — Resume —
+        audioEl.play()
+          .then(() => { isPlaying = true; startAnalysis(); updatePauseBtn(); })
+          .catch(err => console.error('Resume error:', err));
+      }
+      updatePauseBtn();
+    }
+
+    pauseBtn.addEventListener('click', togglePause);
 
     async function play(index) {
       stopPlayback();
@@ -452,13 +499,22 @@
       await audioCtx.resume();
 
       audioEl.play()
-        .then(() => { isPlaying = true; startAnalysis(); startCaptionUpdates(); })
+        .then(() => {
+          isPlaying = true;
+          pauseBtn.hidden = false;
+          updatePauseBtn();
+          startAnalysis();
+          startCaptionUpdates();
+        })
         .catch(err => console.error('Playback error:', err));
 
       audioEl.onended = () => {
         if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
         targetOpen = 0;
+        for (const layer of layers) layer.smooth = 0;
+        renderFrame(VH);
         isPlaying  = false;
+        pauseBtn.hidden = true;
         stopCaptionUpdates();
       };
     }
