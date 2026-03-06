@@ -271,7 +271,7 @@
   </nav>
 
   <!-- ── PAUSE / PLAY BUTTON ── -->
-  <button id="pause-btn" aria-label="Pause" hidden>⏸</button>
+  <button id="pause-btn" aria-label="Pause" hidden>&#x23F8;&#xFE0E;</button>
 
   <!-- ── CC BUTTON ── -->
   <button id="cc-btn" aria-label="Toggle closed captions" aria-pressed="false">CC</button>
@@ -435,7 +435,7 @@
     const pauseBtn = document.getElementById('pause-btn');
 
     function updatePauseBtn() {
-      pauseBtn.textContent = isPlaying ? '⏸' : '▶';
+      pauseBtn.textContent = isPlaying ? '⏸\uFE0E' : '▶\uFE0E';
       pauseBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Resume');
     }
 
